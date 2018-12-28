@@ -1,11 +1,23 @@
-db:
-  image: postgres
-web:
-  build: .
-  command: python manage.py runserver 0.0.0.0:8000
-  volumes:
-    - .:/code
-  ports:
-    - "8000:8000"
-  links:
-  - db
+version: '2'
+services:
+  db:
+      image: postgres
+  web:
+      build: .
+      volumes:
+        - .:/code
+      command: bash -c "pip install -r ./requirements.txt && python manage.py makemigrations && python manage.py migrate && gunicorn teste_docker.wsgi -b 0.0.0.0:8000"
+      depends_on:
+        - db
+      expose:
+        - "8000"
+  nginx:
+    image: nginx:latest
+    container_name: ng01
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/code
+      - ./config/nginx:/etc/nginx/conf.d
+    depends_on:
+      - web
